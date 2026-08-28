@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>The Waterfront</title>
+
+  <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    /* Estilos para el Preloader */
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #111;
+      z-index: 99999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s ease;
+    }
+
+    .preloader__spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #333;
+      border-top: 5px solid #348aa7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <script>
+    AFRAME.registerComponent('toggle-info', {
+      schema: {
+        textTarget: {type: 'selector'},
+        bgTarget: {type: 'selector'}
+      },
+      init: function () {
+        var el = this.el;
+        var data = this.data;
+        var isOpen = false; // Estado local de cada esfera
+
+        el.addEventListener('click', function () {
+          isOpen = !isOpen;
+
+          if (isOpen) {
+            // --- MOSTRAR VENTANA ---
+            // Definir escala del texto (el tip-1 es más grande en tu diseño original)
+            var targetTextScale = (el.id === 'tip-1') ? '1.75 1.75 1.75' : '1 1 1';
+
+            // Animación de escala para texto y fondo
+            data.textTarget.setAttribute('animation__scale', {
+              property: 'scale',
+              to: targetTextScale,
+              dur: 500,
+              easing: 'easeOutElastic'
+            });
+            data.bgTarget.setAttribute('animation__scale', {
+              property: 'scale',
+              to: '1 1 1',
+              dur: 500,
+              easing: 'easeOutElastic'
+            });
+
+            // Animación de opacidad
+            data.textTarget.setAttribute('animation__fade', {
+              property: 'text.opacity',
+              to: 1,
+              dur: 300,
+              easing: 'linear'
+            });
+            data.bgTarget.setAttribute('animation__fade', {
+              property: 'material.opacity',
+              to: 1,
+              dur: 300,
+              easing: 'linear'
+            });
+
+          } else {
+            // --- OCULTAR VENTANA ---
+            // Escala a 0 para que no estorben físicamente en el espacio 3D
+            data.textTarget.setAttribute('animation__scale', {
+              property: 'scale',
+              to: '0 0 0',
+              dur: 300,
+              easing: 'easeInQuad'
+            });
+            data.bgTarget.setAttribute('animation__scale', {
+              property: 'scale',
+              to: '0 0 0',
+              dur: 300,
+              easing: 'easeInQuad'
+            });
+
+            // Opacidad a 0
+            data.textTarget.setAttribute('animation__fade', {
+              property: 'text.opacity',
+              to: 0,
+              dur: 200,
+              easing: 'linear'
+            });
+            data.bgTarget.setAttribute('animation__fade', {
+              property: 'material.opacity',
+              to: 0,
+              dur: 200,
+              easing: 'linear'
+            });
+          }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <div id="preloader">
+    <div class="preloader__spinner"></div>
+  </div>
+
+  <a-scene>
+    <a-sky src="bbb.jpg" rotation="0 -130 0"></a-sky>
+
+    <a-entity id="main-camera-wrapper" position="0.43 4.06 4.92" rotation="0 -2.29 0">
+      <a-camera id="main-camera" visible="true" wasd-controls="enabled: false; easing: 10; acceleration: 75; fly: false;"
+                cursor="rayOrigin: mouse;" raycaster="objects: .clickable">
+        
+        <a-cursor id="fuse-cursor" objects=".clickable" fuse="true" position="0 0 -1" rotation="0 0 0"
+                  scale="1 1 1" geometry="radiusInner: 0.02; radiusOuter: 0.03; thetaLength: 360; thetaStart: 90;"
+                  color="blue" opacity="1" shader="flat" repeat="1 1" visible="true"></a-cursor>
+
+        <a-ring id="fuse-progress" position="0 0 -0.999" rotation="0 0 0" scale="1 1 1"
+                radius-inner="0.02" radius-outer="0.03" theta-length="360" theta-start="90" color="#348aa7"
+                opacity="0" shader="flat" repeat="1 1" visible="true" class="clickable" 
+                animation="startEvents: fusing; property: geometry.thetaLength; to: 0; dur: 1500; easing: linear; delay: 0; dir: normal; loop: 0; from: 360;"
+                animation__1="startEvents: fusing; property: opacity; to: 1; dur: 500; easing: linear; delay: 0; dir: normal; loop: 0; from: 0;"></a-ring>
+      </a-camera>
+    </a-entity>
+
+    <a-sphere id="tip-1" 
+              position="-4 6 8" 
+              rotation="0 140 0"
+              scale="0.5 0.5 0.5" radius="1" color="#FFFFFF" opacity="0" shader="flat" side="double" repeat="1 1" visible="true" class="clickable" 
+              toggle-info="textTarget: #tip-1-text; bgTarget: #tip-1-background"
+              animation="property: scale; to: 0.35 0.35 0.35; dur: 2000; easing: linear; elasticity: 400; delay: 0; dir: normal; loop: true; ">
+      <a-image src="view.png"></a-image>
+    </a-sphere>
+
+    <a-text id="tip-1-text" 
+            position="-4 7 8" 
+            rotation="0 140 0"
+            scale="0 0 0" value="Aqui podras poner contenido educativo para ensenar algo."
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json" align="left" opacity="0" color="#000000" wrap-count="26.38"
+            letter-spacing="0" line-height="80.00" width="2.52" height="0" side="double" anchor="center"
+            visible="true"></a-text>
+
+    <a-plane id="tip-1-background" 
+             position="-4 7 8" 
+             rotation="0 140 0"
+             scale="0 0 0" width="3.00" height="1.5" color="yellow" opacity="0" shader="flat"
+             side="double" metalness="0.5" roughness="1" repeat="1 1" visible="true"></a-plane>
+
+    <a-sphere id="tip-2" position="-5 6 4" rotation="0 60 0"
+              scale="0.5 0.5 0.5" radius="1" color="#FFFFFF" opacity="0" shader="flat" side="double" repeat="1 1" visible="true" class="clickable" 
+              toggle-info="textTarget: #tip-2-text; bgTarget: #tip-2-background"
+              animation="property: scale; to: 0.35 0.35 0.35; dur: 2000; easing: linear; elasticity: 400; delay: 0; dir: normal; loop: true; ">
+      <a-image src="view.png"></a-image>
+    </a-sphere>
+
+    <a-text id="tip-2-text" position="-5 5 4.5" rotation="0 60 0"
+            scale="0 0 0" value="Aqui podras poner contenido educativo para ensenar algo."
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json" align="left" opacity="0" color="#000000" wrap-count="26.38"
+            letter-spacing="0" line-height="80.00" width="2.52" height="0" side="double" anchor="center"
+            visible="true"></a-text>
+
+    <a-plane id="tip-2-background" position="-5 5 4.5" rotation="0 60 0"
+             scale="0 0 0" width="3.00" height="1.5" color="cyan" opacity="0" shader="flat"
+             side="double" metalness="0.5" roughness="1" repeat="1 1" visible="true"></a-plane>
+
+    <a-sphere id="tip-3" position="-5 6.5 -3" rotation="0 60 0"
+              scale="1 1 1" radius="1" color="#FFFFFF" opacity="0" shader="flat" side="double" repeat="1 1" visible="true" class="clickable" 
+              toggle-info="textTarget: #tip-3-text; bgTarget: #tip-3-background"
+              animation="property: scale; to: 0.35 0.35 0.35; dur: 2000; easing: linear; elasticity: 400; delay: 0; dir: normal; loop: true; ">
+      <a-image src="view.png"></a-image>
+    </a-sphere>
+
+    <a-text id="tip-3-text" position="-2 7 0" rotation="0 60 0"
+            scale="0 0 0" value="Aqui podras poner contenido educativo para ensenar algo."
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json" align="left" opacity="0" color="#000000" wrap-count="26.38"
+            letter-spacing="0" line-height="80.00" width="2.52" height="0" side="double" anchor="center"
+            visible="true"></a-text>
+
+    <a-plane id="tip-3-background" position="-2 7 0" rotation="0 60 0"
+             scale="0 0 0" width="3.00" height="1.5" color="pink" opacity="0" shader="flat"
+             side="double" metalness="0.5" roughness="1" repeat="1 1" visible="true"></a-plane>
+
+    <a-sphere id="tip-4" position="3.5 4 0" rotation="0 -30 0"   
+              scale="0.5 0.5 0.5" radius="1" color="#FFFFFF" opacity="0" shader="flat" side="double" repeat="1 1" visible="true" class="clickable" 
+              toggle-info="textTarget: #tip-4-text; bgTarget: #tip-4-background"
+              animation="property: scale; to: 0.35 0.35 0.35; dur: 2000; easing: linear; elasticity: 400; delay: 0; dir: normal; loop: true; ">
+      <a-image src="view.png"></a-image>
+    </a-sphere>
+
+    <a-text id="tip-4-text" position="7.5 4.5 0" rotation="0 -30 0"
+            scale="0 0 0" value="Aqui podras poner contenido educativo para ensenar algo."
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json" align="left" opacity="0" color="#000000" wrap-count="26.38"
+            letter-spacing="0" line-height="80.00" width="5.52" height="0" side="double" anchor="center"
+            visible="true"></a-text>
+
+    <a-plane id="tip-4-background" position="7.5 4.5 0" rotation="0 -30 0"
+             scale="0 0 0" width="6.50" height="2.12" color="orange" opacity="0" shader="flat"
+             side="double" metalness="0.5" roughness="1" repeat="1 1" visible="true"></a-plane>
+
+    <a-sphere id="tip-5" position="7 5 7" rotation="0 -120 0"
+              scale="1 1 1" radius="1" color="#FFFFFF" opacity="0" shader="flat" side="double" repeat="1 1" visible="true" class="clickable" 
+              toggle-info="textTarget: #tip-5-text; bgTarget: #tip-5-background"
+              animation="property: scale; to: 0.35 0.35 0.35; dur: 2000; easing: linear; elasticity: 400; delay: 0; dir: normal; loop: true; ">
+      <a-image src="view.png"></a-image>
+    </a-sphere>
+
+    <a-text id="tip-5-text" position="4 6.5 6" rotation="0 -120 0"
+            scale="0 0 0" value="Aqui podras poner contenido educativo para ensenar algo."
+            font="https://cdn.aframe.io/fonts/Roboto-msdf.json" align="left" opacity="0" color="#000000" wrap-count="26.38"
+            letter-spacing="0" line-height="80.00" width="2.52" height="0" side="double" anchor="center"
+            visible="true"></a-text>
+
+    <a-plane id="tip-5-background" position="4 6.5 6" rotation="0 -120 0"
+             scale="0 0 0" width="3.00" height="1.5" color="cyan" opacity="0" shader="flat"
+             side="double" metalness="0.5" roughness="1" repeat="1 1" visible="true"></a-plane>
+  </a-scene>
+
+  <script>
+    $(document).ready(function () {
+      const scene = document.querySelector('a-scene');
+      if (scene.hasLoaded) {
+        $('#preloader').fadeOut(500);
+      } else {
+        scene.addEventListener('loaded', function() {
+          $('#preloader').fadeOut(500);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
